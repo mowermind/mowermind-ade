@@ -9,7 +9,6 @@ if [[ -n "$GITLAB_CI" ]]; then
     exec "$@"
 fi
 
-
 if [[ -n "$DEBUG" ]]; then
     set -x
 fi
@@ -21,16 +20,40 @@ if [[ -n "$TIMEZONE" ]]; then
     dpkg-reconfigure -f noninteractive tzdata
 fi
 
+user=$(awk -F: '$3=='$USER_ID'{print $1}' /etc/passwd)
+if [ -n "$user" ]; then
+    echo "found user: ["$user"] with user_id ["$USER_ID"]"
+    if [ "$user" != "$USER" ]; then
+        echo "now try to delete user [$user]"
+        userdel -rf $user
+        if [ $? -eq 0 ]; then
+           echo "delete [$user] successful"
+           groupdel "$GROUP" &>/dev/null || true
+           groupadd -og "$GROUP_ID" "$GROUP"
 
-groupdel "$GROUP" &>/dev/null || true
-groupadd -og "$GROUP_ID" "$GROUP"
+           useradd -M -u "$USER_ID" -g "$GROUP_ID" -d "/home/$USER" -s /bin/bash "$USER"
 
-useradd -M -u "$USER_ID" -g "$GROUP_ID" -d "/home/$USER" -s /bin/bash "$USER"
+           groupdel video &> /dev/null || true
+           groupadd -og "${VIDEO_GROUP_ID}" video
+           gpasswd -a "${USER}" video
 
-groupdel video &> /dev/null || true
-groupadd -og "${VIDEO_GROUP_ID}" video
-gpasswd -a "${USER}" video
+        else
+           echo "delete [$user] failure"
+        fi
+    else
+        echo "the user is same as USER, do not delete user"
+    fi
+else
+    echo "do not found user with user_id ["$USER_ID"], add user"
+    groupdel "$GROUP" &>/dev/null || true
+    groupadd -og "$GROUP_ID" "$GROUP"
 
+    useradd -M -u "$USER_ID" -g "$GROUP_ID" -d "/home/$USER" -s /bin/bash "$USER"
+
+    groupdel video &> /dev/null || true
+    groupadd -og "${VIDEO_GROUP_ID}" video
+    gpasswd -a "${USER}" video
+fi
 
 for x in /etc/skel/.*; do
     target="/home/$USER/$(basename "$x")"
@@ -54,4 +77,3 @@ fi
 
 echo 'ADE startup completed.'
 exec "$@"
-
