@@ -1,3 +1,19 @@
+export ADE_DOCKER_RUN_ARGS="\
+--cap-add=SYS_PTRACE \
+--net=host \
+--privileged \
+-v ${HOME}/.Xauthority:${HOME}/.Xauthority:ro \
+-e XAUTHORITY=${HOME}/.Xauthority \
+-e DISPLAY=${DISPLAY} \
+-e NVIDIA_VISIBLE_DEVICES=all \
+-e NVIDIA_DRIVER_CAPABILITIES=all \
+-e RMW_IMPLEMENTATION=rmw_cyclonedds_cpp \
+-e LANG=C.UTF-8 \
+-v /dev/shm:/dev/shm \
+--gpus all \
+"
+export ADE_GITLAB=ghcr.io
+export ADE_REGISTRY=ghcr.io
 export ADE_IMAGES="
-  image:latest
+  ghcr.io/mowermind/ade:jazzy
 "
