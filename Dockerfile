@@ -1,8 +1,8 @@
-FROM ubuntu:bionic
+FROM osrf/ros:jazzy-desktop-full-noble
 
 RUN apt-get update && \
     echo 'Etc/UTC' > /etc/timezone && \
-    ln -s /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
+    ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
     apt-get install -y \
         sudo \
         locales \
